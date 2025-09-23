@@ -67,4 +67,39 @@ public class TransactionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Transaction> updateTransaction(
+            @PathVariable Long id,
+            @RequestBody TransactionRequestDTO request) {
+
+        // Buscar la transacción existente
+        Transaction existingTransaction = transactionRepository.findById(id)
+                .orElse(null);
+
+        if (existingTransaction == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Validar usuario y categoría
+        BudgetUser user = validateUser(request.getUserId());
+        if (user == null) return ResponseEntity.notFound().build();
+
+        Category category = validateCategory(request.getCategoryId());
+        if (category == null) return ResponseEntity.notFound().build();
+
+        // Actualizar campos
+        existingTransaction.setAmount(request.getAmount());
+        existingTransaction.setDescription(request.getDescription());
+        existingTransaction.setDate(request.getDate());
+        existingTransaction.setType(request.getType());
+        existingTransaction.setUser(user);
+        existingTransaction.setCategory(category);
+
+        // Guardar y devolver
+        Transaction updatedTransaction = transactionRepository.save(existingTransaction);
+        return ResponseEntity.ok(updatedTransaction);
+    }
+
+
 }
