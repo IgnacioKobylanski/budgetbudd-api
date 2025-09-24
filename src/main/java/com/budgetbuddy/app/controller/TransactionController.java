@@ -73,7 +73,6 @@ public class TransactionController {
             @PathVariable Long id,
             @RequestBody TransactionRequestDTO request) {
 
-        // Buscar la transacción existente
         Transaction existingTransaction = transactionRepository.findById(id)
                 .orElse(null);
 
@@ -81,14 +80,12 @@ public class TransactionController {
             return ResponseEntity.notFound().build();
         }
 
-        // Validar usuario y categoría
         BudgetUser user = validateUser(request.getUserId());
         if (user == null) return ResponseEntity.notFound().build();
 
         Category category = validateCategory(request.getCategoryId());
         if (category == null) return ResponseEntity.notFound().build();
 
-        // Actualizar campos
         existingTransaction.setAmount(request.getAmount());
         existingTransaction.setDescription(request.getDescription());
         existingTransaction.setDate(request.getDate());
@@ -96,10 +93,17 @@ public class TransactionController {
         existingTransaction.setUser(user);
         existingTransaction.setCategory(category);
 
-        // Guardar y devolver
         Transaction updatedTransaction = transactionRepository.save(existingTransaction);
         return ResponseEntity.ok(updatedTransaction);
     }
 
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
+        return transactionRepository.findById(id)
+                .map(transaction -> {
+                    transactionRepository.delete(transaction);
+                    return ResponseEntity.ok().<Void>build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
