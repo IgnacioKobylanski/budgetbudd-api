@@ -33,7 +33,7 @@ public class TransactionService {
         return categoryRepository.findById(categoryId).orElse(null);
     }
 
-    // CREATE
+    // CREATE NEW
     public Transaction createTransaction(TransactionRequestDTO request) {
         BudgetUser user = validateUser(request.getUserId());
         if (user == null) return null;
