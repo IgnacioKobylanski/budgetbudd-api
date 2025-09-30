@@ -1,8 +1,7 @@
 package com.budgetbuddy.app.controller;
 
-
 import com.budgetbuddy.app.entity.BudgetUser;
-import com.budgetbuddy.app.repository.BudgetUserRepository;
+import com.budgetbuddy.app.service.BudgetUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,48 +11,45 @@ import java.util.List;
 @RequestMapping("/users")
 public class BudgetUserController {
 
+    private final BudgetUserService budgetUserService;
 
-    private final BudgetUserRepository budgetUserRepository;
-
-    public BudgetUserController(BudgetUserRepository budgetUserRepository) {
-        this.budgetUserRepository = budgetUserRepository;
+    public BudgetUserController(BudgetUserService budgetUserService) {
+        this.budgetUserService = budgetUserService;
     }
 
-    @GetMapping
-    public List<BudgetUser> getAllUsers(){
-        return budgetUserRepository.findAll();
-    }
-
+    // CREATE
     @PostMapping
-    public BudgetUser createUser(@RequestBody BudgetUser user){
-        return budgetUserRepository.save(user);
+    public ResponseEntity<BudgetUser> createUser(@RequestBody BudgetUser user) {
+        return ResponseEntity.ok(budgetUserService.createUser(user));
     }
 
+    // READ ALL
+    @GetMapping
+    public ResponseEntity<List<BudgetUser>> getAllUsers() {
+        return ResponseEntity.ok(budgetUserService.getAllUsers());
+    }
+
+    // READ ONE
     @GetMapping("/{id}")
-    public ResponseEntity<BudgetUser> getUserById(@PathVariable Long id){
-        return budgetUserRepository.findById(id)
-                .map(user -> ResponseEntity.ok().body(user))
+    public ResponseEntity<BudgetUser> getUserById(@PathVariable Long id) {
+        return budgetUserService.getUserById(id)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<BudgetUser> updateUser(@PathVariable Long id, @RequestBody BudgetUser updatedUser){
-        return budgetUserRepository.findById(id)
-                .map(user -> {
-                    user.setName(updatedUser.getName());
-                    BudgetUser savedUser = budgetUserRepository.save(user);
-                    return ResponseEntity.ok().body(savedUser);
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<BudgetUser> updateUser(@PathVariable Long id, @RequestBody BudgetUser updatedUser) {
+        BudgetUser user = budgetUserService.updateUser(id, updatedUser);
+        if (user == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(user);
     }
 
+    // DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id){
-        return budgetUserRepository.findById(id)
-                .map(user -> {
-                    budgetUserRepository.delete(user);
-                    return ResponseEntity.ok().<Void>build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        boolean deleted = budgetUserService.deleteUser(id);
+        if (!deleted) return ResponseEntity.notFound().build();
+        return ResponseEntity.noContent().build();
     }
 }
