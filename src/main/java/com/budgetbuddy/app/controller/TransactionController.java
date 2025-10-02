@@ -3,6 +3,7 @@ package com.budgetbuddy.app.controller;
 import com.budgetbuddy.app.dto.TransactionRequestDTO;
 import com.budgetbuddy.app.entity.Transaction;
 import com.budgetbuddy.app.service.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,7 @@ public class TransactionController {
 
     // CREATE
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@RequestBody TransactionRequestDTO request) {
+    public ResponseEntity<Transaction> createTransaction(@Valid  @RequestBody TransactionRequestDTO request) {
         Transaction transaction = transactionService.createTransaction(request);
         if (transaction == null) return ResponseEntity.badRequest().build();
         return ResponseEntity.ok(transaction);
@@ -43,7 +44,7 @@ public class TransactionController {
     // UPDATE
     @PutMapping("/{id}")
     public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id,
-                                                         @RequestBody TransactionRequestDTO request) {
+                                                         @Valid @RequestBody TransactionRequestDTO request) {
         Transaction updatedTransaction = transactionService.updateTransaction(id, request);
         if (updatedTransaction == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updatedTransaction);
