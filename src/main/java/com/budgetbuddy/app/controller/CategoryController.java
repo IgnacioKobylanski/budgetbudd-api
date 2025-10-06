@@ -32,24 +32,21 @@ public class CategoryController {
     // READ ONE
     @GetMapping("/{id}")
     public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
-        return categoryService.getCategoryById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Category category = categoryService.getCategoryById(id);
+        return ResponseEntity.ok(category);
     }
 
     // UPDATE
     @PutMapping("/{id}")
     public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestBody Category updateCategory) {
         Category updated = categoryService.updateCategory(id, updateCategory);
-        if (updated == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updated);
     }
 
     // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
-        boolean deleted = categoryService.deleteCategory(id);
-        if (!deleted) return ResponseEntity.notFound().build();
+        categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
     }
 }

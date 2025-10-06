@@ -4,6 +4,7 @@ import com.budgetbuddy.app.dto.TransactionRequestDTO;
 import com.budgetbuddy.app.entity.Transaction;
 import com.budgetbuddy.app.service.TransactionService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +22,9 @@ public class TransactionController {
 
     // CREATE
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@Valid  @RequestBody TransactionRequestDTO request) {
+    public ResponseEntity<Transaction> createTransaction(@Valid @RequestBody TransactionRequestDTO request) {
         Transaction transaction = transactionService.createTransaction(request);
-        if (transaction == null) return ResponseEntity.badRequest().build();
-        return ResponseEntity.ok(transaction);
+        return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }
 
     // READ ALL
@@ -36,9 +36,8 @@ public class TransactionController {
     // READ ONE
     @GetMapping("/{id}")
     public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id) {
-        return transactionService.getTransactionById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Transaction transaction = transactionService.getTransactionById(id);
+        return ResponseEntity.ok(transaction);
     }
 
     // UPDATE
@@ -46,15 +45,13 @@ public class TransactionController {
     public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id,
                                                          @Valid @RequestBody TransactionRequestDTO request) {
         Transaction updatedTransaction = transactionService.updateTransaction(id, request);
-        if (updatedTransaction == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updatedTransaction);
     }
 
     // DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
-        boolean deleted = transactionService.deleteTransaction(id);
-        if (!deleted) return ResponseEntity.notFound().build();
+        transactionService.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
 }

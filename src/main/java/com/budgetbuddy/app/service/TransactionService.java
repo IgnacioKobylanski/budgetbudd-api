@@ -1,45 +1,54 @@
 package com.budgetbuddy.app.service;
 
-
 import com.budgetbuddy.app.dto.TransactionRequestDTO;
 import com.budgetbuddy.app.entity.BudgetUser;
 import com.budgetbuddy.app.entity.Category;
 import com.budgetbuddy.app.entity.Transaction;
+import com.budgetbuddy.app.exception.CategoryNotFoundException;
+import com.budgetbuddy.app.exception.TransactionNotFoundException;
+import com.budgetbuddy.app.exception.UserNotFoundException;
 import com.budgetbuddy.app.repository.BudgetUserRepository;
 import com.budgetbuddy.app.repository.CategoryRepository;
 import com.budgetbuddy.app.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TransactionService {
+
     private final TransactionRepository transactionRepository;
     private final BudgetUserRepository budgetUserRepository;
     private final CategoryRepository categoryRepository;
 
-    public TransactionService(TransactionRepository transactionRepository,BudgetUserRepository budgetUserRepository, CategoryRepository categoryRepository){
+    public TransactionService(TransactionRepository transactionRepository,
+                              BudgetUserRepository budgetUserRepository,
+                              CategoryRepository categoryRepository) {
         this.transactionRepository = transactionRepository;
         this.budgetUserRepository = budgetUserRepository;
         this.categoryRepository = categoryRepository;
     }
 
+    // VALIDACIONES
     private BudgetUser validateUser(Long userId) {
-        return budgetUserRepository.findById(userId).orElse(null);
+        return budgetUserRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Usuario con ID " + userId + " no encontrado"));
     }
 
     private Category validateCategory(Long categoryId) {
-        return categoryRepository.findById(categoryId).orElse(null);
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryNotFoundException("Categoría con ID " + categoryId + " no encontrada"));
     }
 
-    // CREATE NEW
+    private Transaction validateTransaction(Long transactionId) {
+        return transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new TransactionNotFoundException("Transacción con ID " + transactionId + " no encontrada"));
+    }
+
+    // CREATE
     public Transaction createTransaction(TransactionRequestDTO request) {
         BudgetUser user = validateUser(request.getUserId());
-        if (user == null) return null;
-
         Category category = validateCategory(request.getCategoryId());
-        if (category == null) return null;
 
         Transaction transaction = new Transaction();
         transaction.setAmount(request.getAmount());
@@ -58,20 +67,15 @@ public class TransactionService {
     }
 
     // READ ONE
-    public Optional<Transaction> getTransactionById(Long id) {
-        return transactionRepository.findById(id);
+    public Transaction getTransactionById(Long id) {
+        return validateTransaction(id);
     }
 
     // UPDATE
     public Transaction updateTransaction(Long id, TransactionRequestDTO request) {
-        Transaction existingTransaction = transactionRepository.findById(id).orElse(null);
-        if (existingTransaction == null) return null;
-
+        Transaction existingTransaction = validateTransaction(id);
         BudgetUser user = validateUser(request.getUserId());
-        if (user == null) return null;
-
         Category category = validateCategory(request.getCategoryId());
-        if (category == null) return null;
 
         existingTransaction.setAmount(request.getAmount());
         existingTransaction.setDescription(request.getDescription());
@@ -84,12 +88,8 @@ public class TransactionService {
     }
 
     // DELETE
-    public boolean deleteTransaction(Long id) {
-        return transactionRepository.findById(id)
-                .map(transaction -> {
-                    transactionRepository.delete(transaction);
-                    return true;
-                })
-                .orElse(false);
+    public void deleteTransaction(Long id) {
+        Transaction transaction = validateTransaction(id);
+        transactionRepository.delete(transaction);
     }
 }

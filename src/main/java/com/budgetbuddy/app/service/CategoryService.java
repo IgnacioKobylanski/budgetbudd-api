@@ -1,11 +1,11 @@
 package com.budgetbuddy.app.service;
 
 import com.budgetbuddy.app.entity.Category;
+import com.budgetbuddy.app.exception.CategoryNotFoundException;
 import com.budgetbuddy.app.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CategoryService {
@@ -27,27 +27,25 @@ public class CategoryService {
     }
 
     // READ ONE
-    public Optional<Category> getCategoryById(Long id) {
-        return categoryRepository.findById(id);
+    public Category getCategoryById(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException("Categoría con ID " + id + " no encontrada"));
     }
 
     // UPDATE
     public Category updateCategory(Long id, Category updateCategory) {
-        return categoryRepository.findById(id)
-                .map(category -> {
-                    category.setName(updateCategory.getName());
-                    return categoryRepository.save(category);
-                })
-                .orElse(null);
+        Category existingCategory = categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException("No se puede actualizar. Categoría con ID " + id + " no encontrada"));
+
+        existingCategory.setName(updateCategory.getName());
+        return categoryRepository.save(existingCategory);
     }
 
     // DELETE
-    public boolean deleteCategory(Long id) {
-        return categoryRepository.findById(id)
-                .map(category -> {
-                    categoryRepository.delete(category);
-                    return true;
-                })
-                .orElse(false);
+    public void deleteCategory(Long id) {
+        Category existingCategory = categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException("No se puede eliminar. Categoría con ID " + id + " no encontrada"));
+
+        categoryRepository.delete(existingCategory);
     }
 }

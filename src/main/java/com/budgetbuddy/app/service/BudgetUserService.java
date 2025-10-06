@@ -1,11 +1,11 @@
 package com.budgetbuddy.app.service;
 
 import com.budgetbuddy.app.entity.BudgetUser;
+import com.budgetbuddy.app.exception.UserNotFoundException;
 import com.budgetbuddy.app.repository.BudgetUserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class BudgetUserService {
@@ -27,27 +27,24 @@ public class BudgetUserService {
     }
 
     // READ ONE
-    public Optional<BudgetUser> getUserById(Long id) {
-        return budgetUserRepository.findById(id);
+    public BudgetUser getUserById(Long id) {
+        return budgetUserRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Usuario con ID " + id + " no encontrado"));
     }
 
     // UPDATE
     public BudgetUser updateUser(Long id, BudgetUser updatedUser) {
-        return budgetUserRepository.findById(id)
-                .map(user -> {
-                    user.setName(updatedUser.getName());
-                    return budgetUserRepository.save(user);
-                })
-                .orElse(null);
+        BudgetUser existingUser = budgetUserRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("No se puede actualizar. Usuario con ID " + id + " no encontrado"));
+
+        existingUser.setName(updatedUser.getName());
+        return budgetUserRepository.save(existingUser);
     }
 
     // DELETE
-    public boolean deleteUser(Long id) {
-        return budgetUserRepository.findById(id)
-                .map(user -> {
-                    budgetUserRepository.delete(user);
-                    return true;
-                })
-                .orElse(false);
+    public void deleteUser(Long id) {
+        BudgetUser existingUser = budgetUserRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("No se puede eliminar. Usuario con ID " + id + " no encontrado"));
+        budgetUserRepository.delete(existingUser);
     }
 }
